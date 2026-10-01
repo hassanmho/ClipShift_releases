@@ -29,8 +29,6 @@ Download, trim and convert videos — fast and simple, on **Windows** and **Andr
 
 ويندوز ممكن يطلّع تحذير SmartScreen لأنه البرنامج جديد وغير موقّع: اضغط **More info ← Run anyway**.
 
-حمّل فقط المحتوى اللي بتملكه أو عندك إذن تحفظه. ClipShift غير تابع لأي منصة فيديو.
-Download only content you own or have permission to save. ClipShift is not affiliated with any video platform.
 
 ---
 [HasMho](https://hasmho.com)
