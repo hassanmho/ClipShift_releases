@@ -1,12 +1,12 @@
 # ClipShift
 
-حمّل الفيديو وقصّه وحوّله، بسرعة وبدون تعقيد — على **ويندوز** و**أندرويد**.
+حمّل الفيديو وقصّه وحوّله بسرعة وبدون تعقيد، على **ويندوز** و**أندرويد**.
 
-Download, trim and convert videos — fast and simple, on **Windows** and **Android**.
+Download, trim and convert videos on **Windows** and **Android**.
 
 ## التحميل · Download
 
-👉 **[hasmho.com/p/clipshift](https://hasmho.com/p/clipshift)**
+**[hasmho.com/p/clipshift](https://hasmho.com/p/clipshift)**
 
 أو من آخر إصدار هون: [Releases](../../releases/latest)
 
@@ -22,13 +22,12 @@ Download, trim and convert videos — fast and simple, on **Windows** and **Andr
 - قصّ قبل التحميل: نزّل الجزء اللي بدك ياه بس
 - قوائم تشغيل كاملة ومراقبة تلقائية للجديد
 - MP4 · MKV · MP3 (320kbps) · M4A · GIF · 9:16 للستوري
-- طابور تحميل ذكي، بيكمل لحاله إذا انقطع النت
+- طابور تحميل بيكمل لحاله إذا انقطع النت
 - عربي وإنجليزي، وضع فاتح وداكن
 
 ## ملاحظة · Note
 
-ويندوز ممكن يطلّع تحذير SmartScreen لأنه البرنامج جديد وغير موقّع: اضغط **More info ← Run anyway**.
-
+ويندوز ممكن يطلّع تحذير SmartScreen لأنه البرنامج جديد وغير موقّع. اضغط **More info** وبعدين **Run anyway**.
 
 ---
 [HasMho](https://hasmho.com)
