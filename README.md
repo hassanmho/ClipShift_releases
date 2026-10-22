@@ -1,8 +1,8 @@
 # ClipShift
 
-حمّل الفيديو وقصّه وحوّله بسرعة وبدون تعقيد، على **ويندوز** و**أندرويد**.
+حمّل الفيديو  وحوّله بسرعة وبدون تعقيد، على **ويندوز** و**أندرويد**.
 
-Download, trim and convert videos on **Windows** and **Android**.
+Download and convert videos on **Windows** and **Android**.
 
 ## التحميل · Download
 
