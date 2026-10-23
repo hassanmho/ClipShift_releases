@@ -1,0 +1,104 @@
+# Upload ClipShift APK to Huawei AppGallery (draft only, no submit)
+#
+# One-time setup (repo > Settings > Secrets and variables > Actions):
+#   HUAWEI_CLIENT_ID      - from AppGallery Connect > Users and permissions > API key > Connect API
+#   HUAWEI_CLIENT_SECRET  - same place (role: App administrator)
+#   HUAWEI_APP_ID         - 119463703
+#
+# Run: Actions > "Upload to Huawei AppGallery" > Run workflow (enter the tag, e.g. v1.5.2)
+# It also runs automatically when you publish a new GitHub release.
+
+name: Upload to Huawei AppGallery
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1.5.2)"
+        required: true
+      asset:
+        description: "APK file name in the release"
+        required: true
+        default: "app-arm64-v8a-release.apk"
+  release:
+    types: [published]
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+      ASSET: ${{ github.event.inputs.asset || 'app-arm64-v8a-release.apk' }}
+      CLIENT_ID: ${{ secrets.HUAWEI_CLIENT_ID }}
+      CLIENT_SECRET: ${{ secrets.HUAWEI_CLIENT_SECRET }}
+      APP_ID: ${{ secrets.HUAWEI_APP_ID }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download APK from the release
+        run: |
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$ASSET" --dir .
+          ls -l "$ASSET"
+
+      - name: Upload to AppGallery Connect
+        shell: python
+        run: |
+          import json, os, sys, time, urllib.request, urllib.parse
+
+          API = "https://connect-api.cloud.huawei.com/api"
+          cid, secret, app_id = os.environ["CLIENT_ID"], os.environ["CLIENT_SECRET"], os.environ["APP_ID"]
+          path = os.environ["ASSET"]
+          size = os.path.getsize(path)
+
+          def call(method, url, body=None, headers=None, raw=None):
+              data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
+              h = {"Content-Type": "application/json"} if raw is None else {}
+              h.update(headers or {})
+              req = urllib.request.Request(url, data=data, method=method, headers=h)
+              try:
+                  with urllib.request.urlopen(req, timeout=600) as r:
+                      txt = r.read().decode() or "{}"
+              except urllib.error.HTTPError as e:
+                  sys.exit(f"{method} {url.split('?')[0]} -> HTTP {e.code}: {e.read().decode()[:500]}")
+              return json.loads(txt) if txt.strip().startswith("{") else {}
+
+          # 1) access token
+          tok = call("POST", f"{API}/oauth2/v1/token",
+                     {"grant_type": "client_credentials", "client_id": cid, "client_secret": secret})
+          token = tok.get("access_token") or sys.exit(f"No token: {tok}")
+          auth = {"client_id": cid, "Authorization": f"Bearer {token}"}
+          print("Token OK")
+
+          # 2) get upload URL
+          q = urllib.parse.urlencode({"appId": app_id, "fileName": os.path.basename(path),
+                                      "contentLength": size, "suffix": "apk"})
+          r = call("GET", f"{API}/publish/v2/upload-url/for-obs?{q}", headers=auth)
+          info = r.get("urlInfo") or sys.exit(f"No upload URL: {r}")
+          print("Upload URL OK, objectId:", info["objectId"])
+
+          # 3) upload the file (fast GitHub network)
+          with open(path, "rb") as f:
+              call(info.get("method", "PUT"), info["url"], raw=f.read(), headers=info.get("headers", {}))
+          print(f"Uploaded {size/1e6:.1f} MB")
+
+          # 4) attach the file to the draft version (fileType 5 = APK/AAB)
+          r = call("PUT", f"{API}/publish/v2/app-file-info?appId={app_id}",
+                   {"fileType": 5, "files": [{"fileName": os.path.basename(path),
+                                              "fileDestUrl": info["objectId"]}]},
+                   headers=auth)
+          code = r.get("ret", {}).get("code")
+          if code != 0:
+              sys.exit(f"app-file-info failed: {r}")
+          pkg = r.get("pkgId")
+          print("Attached to draft. pkgId:", pkg, "version:", r.get("pkgVersion"))
+
+          # 5) wait for Huawei to finish processing the package
+          if pkg:
+              for _ in range(30):
+                  s = call("GET", f"{API}/publish/v2/package/compile/status?appId={app_id}&pkgIds={pkg}", headers=auth)
+                  st = (s.get("pkgStateList") or [{}])[0].get("successStatus")
+                  print("Compile status:", st)
+                  if st == 0:
+                      break
+                  time.sleep(10)
+
+          print("Done. Open AppGallery Connect > ClipShift > Draft and press Submit yourself.")
