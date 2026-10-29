@@ -5,7 +5,7 @@
 #   HUAWEI_CLIENT_SECRET  - same place (role: App administrator)
 #   HUAWEI_APP_ID         - 119463703
 #
-# Run: Actions > "Upload to Huawei AppGallery" > Run workflow (enter the tag, e.g. v1.5.2)
+# Run: Actions > "Upload to Huawei AppGallery" > Run workflow (tag optional; empty = latest public release)
 # It also runs automatically when you publish a new GitHub release.
 
 name: Upload to Huawei AppGallery
@@ -14,8 +14,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag (e.g. v1.5.2)"
-        required: true
+        description: "Release tag (leave empty = latest public release)"
+        required: false
+        default: ""
       asset:
         description: "APK file name in the release"
         required: true
@@ -36,6 +37,10 @@ jobs:
     steps:
       - name: Download APK from the release
         run: |
+          if [ -z "$TAG" ]; then
+            TAG=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
+            echo "No tag given, using latest release: $TAG"
+          fi
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$ASSET" --dir .
           ls -l "$ASSET"
 
